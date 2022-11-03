@@ -28,6 +28,7 @@ class WeatherManager {
     }
 }
 
+
 struct ResponseBody: Decodable {
     var latitude: Float
     var longitude: Float
@@ -50,3 +51,6 @@ struct hourly: Decodable {
     var temperature_2m: [Float]
 }
 
+func test() {
+ print("Hello")
+}
