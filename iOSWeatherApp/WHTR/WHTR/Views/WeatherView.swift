@@ -20,11 +20,15 @@ struct WeatherView: View {
                     Text("Timezone: \(weather.timezone)")
                         .bold().font(.title)
                     
-                    Text("Today, \(Date().formatted(.dateTime.month().day().minute()))")
+                    Text("Today, \(Date().formatted(.dateTime.month().day().hour().minute()))")
                         .fontWeight(.light)
+                    
+                    Text("\(tempVarToInt)")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
+                Spacer()
+                Text("Latitude: \(weather.latitude), Longitude: \(weather.longitude)")
                 Spacer()
                 
                 VStack {

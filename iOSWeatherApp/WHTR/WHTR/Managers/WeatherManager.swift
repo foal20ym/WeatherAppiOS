@@ -13,7 +13,7 @@ import Combine
 class WeatherManager {
     
     func getCurrentWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) async throws -> ResponseBody {
-        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m&daily=weathercode&timezone=Europe%2FLondon") else { fatalError("Missing URL") }
+        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m&current_weather=true&timezone=Europe%2FLondon") else { fatalError("Missing URL") }
         // This function will use the new async await method introduced in 2021
         
         let urlRequest = URLRequest(url: url)
@@ -38,9 +38,19 @@ struct ResponseBody: Decodable {
     var timezone_abbreviation: String
     var elevation: Int
     
+    var current_weather: current_weather
     var hourly_units: hourly_units
     var hourly: hourly
 }
+
+struct current_weather: Decodable {
+    var temperature: Float
+    var windspeed: Float
+    var winddirection: Int
+    var weathercode: Int
+    var time: String
+}
+
 struct hourly_units: Decodable {
     var temperature_2m: String
     var time: String
@@ -49,8 +59,4 @@ struct hourly_units: Decodable {
 struct hourly: Decodable {
     var time: [String]
     var temperature_2m: [Float]
-}
-
-func test() {
- print("Hello")
 }

@@ -27,6 +27,7 @@
 		15A567312913ED490035DD76 /* ModelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelData.swift; sourceTree = "<group>"; };
 		15A567332913ED690035DD76 /* weatherData.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = weatherData.json; sourceTree = "<group>"; };
 		15A567352913EEE70035DD76 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		15B1200E291937800032288B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		15E1D75229127F79001B45F8 /* WHTR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WHTR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15E1D75529127F7A001B45F8 /* WHTRApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WHTRApp.swift; sourceTree = "<group>"; };
 		15E1D75729127F7A001B45F8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -67,6 +68,7 @@
 		15E1D75429127F79001B45F8 /* WHTR */ = {
 			isa = PBXGroup;
 			children = (
+				15B1200E291937800032288B /* Info.plist */,
 				15E1D7672912868E001B45F8 /* Views */,
 				15E1D763291281B3001B45F8 /* Managers */,
 				15E1D75529127F7A001B45F8 /* WHTRApp.swift */,
@@ -317,6 +319,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"WHTR/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WHTR/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to personalize your app experience.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -346,6 +349,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"WHTR/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WHTR/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to personalize your app experience.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
