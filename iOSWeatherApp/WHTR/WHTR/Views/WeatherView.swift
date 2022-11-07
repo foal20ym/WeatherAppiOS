@@ -5,7 +5,7 @@
 //  Created by Alexander Forsanker on 11/3/22.
 //
 // Code from: https://designcode.io/swiftui-advanced-handbook-data-from-json
-// Test 3
+
 import SwiftUI
 
 struct WeatherView: View {
@@ -87,12 +87,13 @@ struct WeatherView: View {
                         WeatherRow(logo: "thermometer", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
                     }
                     HStack {
-                        WeatherRow(logo: "wind", name: "Windspeed", value: String(weather.current_weather.windspeed) + " m/s")
+                        WeatherRow(logo: "wind", name: "Windspeed", value: String(Int(ceil(weather.current_weather.windspeed/3))) + " m/s")
                         
                         Spacer()
                         
                         WeatherRow(logo: "humidity", name: "Humidity", value: String(weather.hourly.relativehumidity_2m[0]) + "%")
                     }
+                    
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
