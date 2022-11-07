@@ -11,9 +11,10 @@ import Combine
 // Might not need COMBINE, but it depends. Remove if that is the case.
 
 class WeatherManager {
-    
+    var loc = LocationManager().location?.longitude
     func getCurrentWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) async throws -> ResponseBody {
-        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m&current_weather=true&timezone=Europe%2FLondon") else { fatalError("Missing URL") }
+        print("\(latitude), \(longitude)")
+        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=Europe%2FLondon") else { fatalError("Missing URL") }
         // This function will use the new async await method introduced in 2021
         
         let urlRequest = URLRequest(url: url)
@@ -41,6 +42,8 @@ struct ResponseBody: Decodable {
     var current_weather: current_weather
     var hourly_units: hourly_units
     var hourly: hourly
+    var daily_units: daily_units
+    var daily: daily
 }
 
 struct current_weather: Decodable {
@@ -52,11 +55,25 @@ struct current_weather: Decodable {
 }
 
 struct hourly_units: Decodable {
-    var temperature_2m: String
     var time: String
+    var temperature_2m: String
+    var relativehumidity_2m: String
 }
 
 struct hourly: Decodable {
     var time: [String]
     var temperature_2m: [Float]
+    var relativehumidity_2m: [Int]
+}
+
+struct daily_units: Decodable {
+    var time: String
+    var temperature_2m_max: String
+    var temperature_2m_min: String
+}
+
+struct daily: Decodable {
+    var time: [String]
+    var temperature_2m_max: [Float]
+    var temperature_2m_min: [Float]
 }
