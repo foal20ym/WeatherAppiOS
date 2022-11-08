@@ -31,6 +31,8 @@ struct StartView: View {
             .foregroundColor(.white)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .gradientBackground()
+        .ignoresSafeArea(.all)
     }
 }
 
