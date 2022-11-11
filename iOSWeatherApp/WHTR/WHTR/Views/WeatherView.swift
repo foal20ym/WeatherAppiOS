@@ -35,10 +35,15 @@ struct WeatherView: View {
         86:"cloud.snow.fill", 95:"cloud.bolt.fill",96:"cloud.bolt.rain.fill", 99:"cloud.bolt.rain.fill"
     ]
     
+    @StateObject var locationManager = LocationManager()
     
     var body: some View {
         
         ZStack(alignment: .leading) {
+
+            var la = Double(weather.latitude)
+            var lo = Double(weather.longitude)
+            var c = locationManager.reverseGeoCode(latitude: la, longitude: lo)
             
             VStack {
                 // Temporary solution
@@ -48,10 +53,11 @@ struct WeatherView: View {
                 .padding()
                 .ignoresSafeArea(.all)
                 // Temporary solution
-                
+
                 VStack(alignment: .leading, spacing: 5) {
+        
+                    Text("Timezone: \(locationManager.cityName ?? "Göteborg")")
                     
-                    Text("Timezone: \(weather.timezone)")
                         .bold().font(.title)
                     Text("Today, \(Date().formatted(.dateTime.month().day().hour().minute()))")
                         .fontWeight(.light)
@@ -66,8 +72,8 @@ struct WeatherView: View {
                     HStack {
                         VStack(spacing: 20) {
                             Image(systemName:
-    "\(weatherCodeSymbolDictionary[weather.current_weather.weathercode] ?? "sun.max")")
-                                .font(.system(size: 45))
+                                    "\(weatherCodeSymbolDictionary[weather.current_weather.weathercode] ?? "sun.max")")
+                            .font(.system(size: 45))
                             
                             Text("\(weatherCodeDictionary[weather.current_weather.weathercode] ?? "Clear")")
                         }
@@ -87,6 +93,7 @@ struct WeatherView: View {
                     Spacer()
                     //.frame(height: 80)
                     
+                    
                     ScrollView(.horizontal) {
                         HStack(spacing: 20) {
                             VStack{
@@ -99,33 +106,31 @@ struct WeatherView: View {
                                     }
                                 }
                                 .background(.orange)
-                                    HStack{
-                                        ForEach(weather.daily.temperature_2m_min, id: \.self) { temperature in
-                                            Text("Min: \(Int(temperature))°")
-                                                .foregroundColor(.black)
-                                                .frame(width: 100, height: 25)
-                                                .background(.orange)
-                                        }
+                                HStack{
+                                    ForEach(weather.daily.temperature_2m_min, id: \.self) { temperature in
+                                        Text("Min: \(Int(temperature))°")
+                                            .foregroundColor(.black)
+                                            .frame(width: 100, height: 25)
+                                            .background(.orange)
                                     }
-                                    HStack{
-                                        ForEach(weather.daily.temperature_2m_max, id: \.self) { temperature in
-                                            Text("Max: \(Int(temperature))°")
-                                                .foregroundColor(.black)
-                                                .frame(width: 100, height: 25)
-                                                .background(.orange)
-                                        }
+                                }
+                                HStack{
+                                    ForEach(weather.daily.temperature_2m_max, id: \.self) { temperature in
+                                        Text("Max: \(Int(temperature))°")
+                                            .foregroundColor(.black)
+                                            .frame(width: 100, height: 25)
+                                            .background(.orange)
                                     }
+                                }
                                 .background(.orange)
                             } // VStack som håller time, min och max vertikalt
                             .foregroundColor(.white)
                             .background(.orange)
                         } // HStack som håller alla element horisontellt
-                        .frame(width: .infinity, height: 112)
                     } // ScrollView
-                    .frame(width: .infinity, height: 120)
                     .background(.white)
                     
-                    
+                    Spacer()
                     Spacer()
                     
                 }
@@ -136,11 +141,13 @@ struct WeatherView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             
             VStack {
+  
                 Spacer()
                 
                 VStack(alignment: .leading, spacing: 20) {
                     Text("Weather now")
                         .bold().padding(.bottom)
+                        .offset(y:250)
                     
                     HStack {
                         WeatherRow(logo: "thermometer", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
@@ -149,6 +156,7 @@ struct WeatherView: View {
                         
                         WeatherRow(logo: "thermometer", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
                     }
+                    .offset(y: 240)
                     HStack {
                         WeatherRow(logo: "wind", name: "Windspeed", value: String(Int(ceil(weather.current_weather.windspeed/3))) + " m/s")
                         
@@ -156,15 +164,15 @@ struct WeatherView: View {
                         
                         WeatherRow(logo: "humidity", name: "Humidity", value: String(weather.hourly.relativehumidity_2m[0]) + "%")
                     }
+                    .offset(y: 240)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .padding(.bottom)
                 .foregroundColor(Color(hue: 0.602, saturation: 0.881, brightness: 0.375))
-                //.background(.white)
-                //.cornerRadius(20, corners: [.topLeft, .topLeft])
+  
+                Spacer()
             }
-            
             
         }
         .gradientBackground()
@@ -175,6 +183,20 @@ struct WeatherView: View {
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
         WeatherView(weather: previewWeather)
+        /*TabView {
+            //ContentView()
+                //.tabItem {
+                    //Label("Menu", systemImage: "list.dash")
+                //}
+            WeatherView(weather: previewWeather)
+                .tabItem {
+                    Label("Your location", systemImage: "list.dash")
+                }
+            ListView()
+                .tabItem {
+                    Label("My list", systemImage: "list.dash")
+                }
+        }*/
     }
 }
 
@@ -203,3 +225,4 @@ extension View {
         modifier(GradientBackground())
     }
 }
+

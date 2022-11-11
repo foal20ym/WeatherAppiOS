@@ -13,6 +13,7 @@ struct ContentView: View {
     
     var weatherManager = WeatherManager()
     @State var weather: ResponseBody?
+    @State var menuClicked = false
     
     var body: some View {
         VStack {
@@ -39,6 +40,9 @@ struct ContentView: View {
                     StartView()
                         .environmentObject(locationManager)
                 }
+            }
+            if menuClicked {
+                LoadingView()
             }
         }
         .background(Color(hue: 0.649, saturation: 0.884, brightness: 0.561))

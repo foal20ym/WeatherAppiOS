@@ -16,6 +16,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     @Published var location: CLLocationCoordinate2D?
     @Published var isLoading = false
+    @Published var cityName: String?
+    
     
     override init() {
         super.init()
@@ -39,4 +41,30 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         isLoading = false
         manager.requestLocation()
     }
+    
+    let geocoder = CLGeocoder()
+    
+    func reverseGeoCode(latitude: Double, longitude: Double) {
+        let coordinates = CLLocation.init(latitude: latitude, longitude: longitude)
+        
+        geocoder.reverseGeocodeLocation(coordinates) { placemarks, error in
+            if let placemarks = placemarks {
+                self.cityName = placemarks[0].locality
+            } else {
+                print(error.debugDescription)
+            }
+        }
+    }
+    
+    // Forward geolocation
+    func forwardGeoCode(cityName: String) {
+        geocoder.geocodeAddressString(cityName) { placemarks, error in
+            if let placemarks = placemarks {
+                self.location?.latitude = placemarks[0].location?.coordinate.latitude ?? 0
+                self.location?.longitude = placemarks[0].location?.coordinate.longitude ?? 0
+                self.cityName = cityName
+            }
+        }
+    }
 }
+
