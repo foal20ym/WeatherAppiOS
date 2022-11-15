@@ -7,6 +7,7 @@
 // Code from: https://designcode.io/swiftui-advanced-handbook-data-from-json
 
 import SwiftUI
+import CoreLocation
 
 struct City: Identifiable, Decodable {
     var id = UUID() // useful for common SwiftUI display
@@ -16,17 +17,15 @@ struct City: Identifiable, Decodable {
 }
 
 struct WeatherView: View {
-    @State var myList: [ResponseBody] = []
     
+    @State var myList: [ResponseBody] = []
     @State private var elements = ["Donald Duck", "Mickey Mouse", "Goofy", "Pluto"]
-
     @State private var searchString = ""
     @StateObject var vm = SearchResultsViewModel()
-    
     var weatherManager = WeatherManager()
     @State private var latitudeFromPlace: Double = 1.11
     @State private var longitudeFromPlace: Double = 1.11
-    
+
     var filteredElements: [String] {
         guard !searchString.isEmpty else {
             return elements
@@ -36,7 +35,8 @@ struct WeatherView: View {
     
     @State var searchLocations: [String] = []
     //
-    var weather: ResponseBody
+    @State var weather: ResponseBody
+    
     var weatherCodeDictionary =
     [
         0:"Clear", 1:"Mainly clear", 2:"cloud.sun.fill",
@@ -76,11 +76,11 @@ struct WeatherView: View {
         NavigationStack {
             ZStack(alignment: .leading) {
                 
-                var la = Float(weather.latitude)
+/*                var la = Float(weather.latitude)
                 var lo = Float(weather.longitude)
                 
                 var c = locationManager.reverseGeoCode(latitude: Double(la), longitude: Double(lo))
-                var d = locationManager.forwardGeoCode(cityName: selectedCity)
+                var d = locationManager.forwardGeoCode(cityName: selectedCity)*/
                 
                 VStack {
                     // Temporary solution
@@ -100,10 +100,19 @@ struct WeatherView: View {
                                 searchLocations.append("\(place.name)")
                                 
                                 cities.append(City(city: place.name, latitude: Float(place.latitude), longitude: Float(place.longitude)))
+                                
+                                Task {
+                                    do {
+                                        weather = try await weatherManager
+                                            .getCurrentWeather(latitude: place.latitude, longitude: place.longitude)
+                                        locationManager.cityName = place.name
+                                        
+                                    } catch {
+                                        print("Error getting weather: \(error)")
+                                    }
+                                    //WeatherView(weather: weather)
+                                }
                             }
-                        /*.onSubmit {
-                         myList.append(weatherManager.getCurrentWeather(latitude: latitudeFromPlace, longitude: longitudeFromPlace))
-                         }*/
                     }.searchable(text: $searchString).frame(height: 50).ignoresSafeArea(.all)
                         .onChange(of: searchString, perform: { searchText in
                             
@@ -114,33 +123,28 @@ struct WeatherView: View {
                                 vm.places = []
                             }
                         })
-                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!// JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
-                    
-                    /*var location = locationManager.location {
-                       
-                            weather = try await weatherManager
-                                .getCurrentWeather(latitude: location.latitude, longitude: location.longitude)
-                            
-                    }*/
-                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
-                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
+                        .padding(.top)
+                        .padding(.top)
+                    //ASK HOW TO REMOVE THE BLACK VOID OVER SEARCHBAR AND WHAT TO DO TO REMOVE THE LINES ABOVE
                     
                     HStack {
                         Picker("Please Choose Your City", selection: $selectedCity) {
                             ForEach(cities) { Cities in
                                 Text("\(Cities.city)").tag(Cities.city)
-                                
+                                Text("\(Cities.latitude), \(Cities.longitude)")
                             }
+                            /*.onTapGesture {
+                                Task {
+                                    do {
+                                        weather = try await weatherManager
+                                            .getCurrentWeather(latitude: 1, longitude: 1)
+                                        
+                                    } catch {
+                                        print("Error getting weather: \(error)")
+                                    }
+                                }
+                             }*/
                         }
-                        /*.onTapGesture {
-                            
-                        }*/
-                        
-                        /*Button {
-                         cities.append(City(city: selectedCity, latitude: weather.latitude, longitude: weather.longitude))
-                         } label: {
-                         Label("Add City", systemImage: "plus")
-                         }*/
                     }
                     
                     VStack(alignment: .leading, spacing: 5) {
@@ -179,7 +183,7 @@ struct WeatherView: View {
                                 .foregroundColor(.black)
                         }
                         
-                        Spacer()
+                       //Spacer()
                         //.frame(height: 80)
                         
                         
@@ -191,16 +195,15 @@ struct WeatherView: View {
                                             Text("\(time)")
                                                 .foregroundColor(.black)
                                                 .frame(width: 100, height: 50)
-                                                .background(.orange)
+                                                .background(.blue)
                                         }
                                     }
-                                    .background(.orange)
                                     HStack{
                                         ForEach(weather.daily.temperature_2m_min, id: \.self) { temperature in
                                             Text("Min: \(Int(temperature))°")
                                                 .foregroundColor(.black)
                                                 .frame(width: 100, height: 25)
-                                                .background(.orange)
+                                                .background(.blue)
                                         }
                                     }
                                     HStack{
@@ -208,13 +211,13 @@ struct WeatherView: View {
                                             Text("Max: \(Int(temperature))°")
                                                 .foregroundColor(.black)
                                                 .frame(width: 100, height: 25)
-                                                .background(.orange)
+                                                .background(.blue)
                                         }
                                     }
-                                    .background(.orange)
+                                    .background(.blue)
                                 } // VStack som håller time, min och max vertikalt
                                 .foregroundColor(.white)
-                                .background(.orange)
+                                .background(.blue)
                             } // HStack som håller alla element horisontellt
                         } // ScrollView
                         .background(.white)
@@ -269,11 +272,6 @@ struct WeatherView: View {
         }
     }
 }
-private func addItem() {
-    withAnimation {
-        
-    }
-}
 
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
@@ -302,15 +300,14 @@ struct GradientBackground : ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                LinearGradient(colors: [.orange, .red, .purple], //Blue, Mint, Purple
+                LinearGradient(colors: [.blue, .mint, .purple], //Blue, Mint, Purple
                                startPoint: animateGradient ? .topLeading : .bottomLeading,
                                endPoint: animateGradient ? .bottomTrailing : .topTrailing)
-                .onAppear {
+                /*.onAppear {
                     withAnimation(.linear(duration: 10).repeatForever(autoreverses: true)) {
                         animateGradient.toggle()
                     }
-                }
-                
+                }*/
             )
     }
 }

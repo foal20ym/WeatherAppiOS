@@ -11,7 +11,6 @@ import Combine
 // Might not need COMBINE, but it depends. Remove if that is the case.
 
 class WeatherManager {
-    var loc = LocationManager().location?.longitude
     
     func getCurrentWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) async throws -> ResponseBody {
         print("\(latitude), \(longitude)")
