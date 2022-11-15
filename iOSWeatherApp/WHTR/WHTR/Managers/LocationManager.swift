@@ -6,10 +6,11 @@
 //
 // Code inspired by: https://www.youtube.com/watch?v=X2W9MPjrIbk and https://play.ju.se/media/iOS+Development+2022+-+Quiz+App+-+Loading+data+from+a+Server+Workshop/0_5j5xjg5q
 //  https://designcode.io/swiftui-advanced-handbook-data-from-json
-
+// https://www.youtube.com/watch?v=cOD1l2lv2Jw
 
 import Foundation
 import CoreLocation
+import MapKit
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     let manager = CLLocationManager()
@@ -17,12 +18,17 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var location: CLLocationCoordinate2D?
     @Published var isLoading = false
     @Published var cityName: String?
-    
+    @Published var region: MKCoordinateRegion = MKCoordinateRegion.defaultRegion()
     
     override init() {
         super.init()
         manager.delegate = self
         manager.requestWhenInUseAuthorization()
+        
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.distanceFilter = kCLDistanceFilterNone
+        manager.requestAlwaysAuthorization()
+        manager.startUpdatingLocation()
     }
     
     func requestLocation() {
@@ -66,5 +72,30 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdatelocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.location = location.coordinate
+            self?.region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 5000, longitudinalMeters: 5000)
+        }
+    }
+    
+    func getCurrentWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) async throws -> ResponseBody {
+        print("\(latitude), \(longitude)")
+        
+        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto") else { fatalError("Missing URL") }
+        // This function will use the new async await method introduced in 2021
+        
+        let urlRequest = URLRequest(url: url)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { fatalError("Error fetching weather data") }
+        
+        let decodedData = try JSONDecoder().decode(ResponseBody.self, from: data)
+        
+        return decodedData
+    }
 }
-

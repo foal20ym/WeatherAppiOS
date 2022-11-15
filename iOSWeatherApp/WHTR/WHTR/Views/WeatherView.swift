@@ -8,7 +8,34 @@
 
 import SwiftUI
 
+struct City: Identifiable, Decodable {
+    var id = UUID() // useful for common SwiftUI display
+    var city: String  // Toronto, Naples, Berlin, etc.
+    var latitude: Float  // What's the best format to
+    var longitude: Float // store latitude and longitude?
+}
+
 struct WeatherView: View {
+    @State var myList: [ResponseBody] = []
+    
+    @State private var elements = ["Donald Duck", "Mickey Mouse", "Goofy", "Pluto"]
+
+    @State private var searchString = ""
+    @StateObject var vm = SearchResultsViewModel()
+    
+    var weatherManager = WeatherManager()
+    @State private var latitudeFromPlace: Double = 1.11
+    @State private var longitudeFromPlace: Double = 1.11
+    
+    var filteredElements: [String] {
+        guard !searchString.isEmpty else {
+            return elements
+        }
+        return elements.filter { $0.lowercased().contains(searchString.lowercased()) }
+    }
+    
+    @State var searchLocations: [String] = []
+    //
     var weather: ResponseBody
     var weatherCodeDictionary =
     [
@@ -36,158 +63,226 @@ struct WeatherView: View {
     ]
     
     @StateObject var locationManager = LocationManager()
+    @State private var selectedCity = "Toronto"
+    
+    @State private var cities:[City] = [
+        City(city: "Toronto", latitude: 43.651070, longitude: 79.347015),
+        City(city: "Al Ain", latitude: 24.207500, longitude: 55.744720),
+        City(city: "London", latitude: 51.509865, longitude: -0.118092)
+    ]
+    
     
     var body: some View {
-        
-        ZStack(alignment: .leading) {
-
-            var la = Double(weather.latitude)
-            var lo = Double(weather.longitude)
-            var c = locationManager.reverseGeoCode(latitude: la, longitude: lo)
-            
-            VStack {
-                // Temporary solution
-                Group{
-                    Text(" ")
-                }
-                .padding()
-                .ignoresSafeArea(.all)
-                // Temporary solution
-
-                VStack(alignment: .leading, spacing: 5) {
-        
-                    Text("Timezone: \(locationManager.cityName ?? "Göteborg")")
-                    
-                        .bold().font(.title)
-                    Text("Today, \(Date().formatted(.dateTime.month().day().hour().minute()))")
-                        .fontWeight(.light)
-                    
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .foregroundColor(.black)
+        NavigationStack {
+            ZStack(alignment: .leading) {
                 
-                Spacer()
+                var la = Float(weather.latitude)
+                var lo = Float(weather.longitude)
+                
+                var c = locationManager.reverseGeoCode(latitude: Double(la), longitude: Double(lo))
+                var d = locationManager.forwardGeoCode(cityName: selectedCity)
                 
                 VStack {
-                    HStack {
-                        VStack(spacing: 20) {
-                            Image(systemName:
-                                    "\(weatherCodeSymbolDictionary[weather.current_weather.weathercode] ?? "sun.max")")
-                            .font(.system(size: 45))
+                    // Temporary solution
+                    Group{
+                        Text(" ")
+                    }
+                    .padding()
+                    .ignoresSafeArea(.all)
+                    // Temporary solution
+                    
+                    List(vm.places) { place in
+                        Text(place.name)
+                            .onTapGesture {
+                                print("\(place.latitude):\(place.longitude)")
+                                latitudeFromPlace = place.latitude
+                                longitudeFromPlace = place.longitude
+                                searchLocations.append("\(place.name)")
+                                
+                                cities.append(City(city: place.name, latitude: Float(place.latitude), longitude: Float(place.longitude)))
+                            }
+                        /*.onSubmit {
+                         myList.append(weatherManager.getCurrentWeather(latitude: latitudeFromPlace, longitude: longitudeFromPlace))
+                         }*/
+                    }.searchable(text: $searchString).frame(height: 50).ignoresSafeArea(.all)
+                        .onChange(of: searchString, perform: { searchText in
                             
-                            Text("\(weatherCodeDictionary[weather.current_weather.weathercode] ?? "Clear")")
+                            if !searchText.isEmpty {
+                                vm.search(text: searchText, region: locationManager.region)
+                                
+                            } else {
+                                vm.places = []
+                            }
+                        })
+                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!// JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
+                    
+                    /*var location = locationManager.location {
+                       
+                            weather = try await weatherManager
+                                .getCurrentWeather(latitude: location.latitude, longitude: location.longitude)
+                            
+                    }*/
+                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
+                    // JAG VILL ATT FUNKTIONEN HÄR NEDANFÖR ANROPPAS FÖR ATT BYTA VILKEN STAD SOM WEATHERVIEW VISAR!
+                    
+                    HStack {
+                        Picker("Please Choose Your City", selection: $selectedCity) {
+                            ForEach(cities) { Cities in
+                                Text("\(Cities.city)").tag(Cities.city)
+                                
+                            }
                         }
-                        .frame(width: 150, alignment: .leading)
-                        .foregroundColor(.black)
+                        /*.onTapGesture {
+                            
+                        }*/
                         
-                        Spacer()
+                        /*Button {
+                         cities.append(City(city: selectedCity, latitude: weather.latitude, longitude: weather.longitude))
+                         } label: {
+                         Label("Add City", systemImage: "plus")
+                         }*/
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 5) {
                         
-                        let tempVarToInt = Int(weather.current_weather.temperature)
-                        Text("\(tempVarToInt)°")
-                            .font(.system(size: 60))
-                            .fontWeight(.bold)
-                            .padding()
+                        Text("City: \(locationManager.cityName ?? "Göteborg")")
+                        
+                            .bold().font(.title)
+                        Text("Today, \(Date().formatted(.dateTime.month().day().hour().minute()))")
+                            .fontWeight(.light)
+                        
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundColor(.black)
+                    
+                    Spacer()
+                    
+                    VStack {
+                        HStack {
+                            VStack(spacing: 20) {
+                                Image(systemName:
+                                        "\(weatherCodeSymbolDictionary[weather.current_weather.weathercode] ?? "sun.max")")
+                                .font(.system(size: 45))
+                                
+                                Text("\(weatherCodeDictionary[weather.current_weather.weathercode] ?? "Clear")")
+                            }
+                            .frame(width: 150, alignment: .leading)
                             .foregroundColor(.black)
-                    }
-                    
-                    Spacer()
-                    //.frame(height: 80)
-                    
-                    
-                    ScrollView(.horizontal) {
-                        HStack(spacing: 20) {
-                            VStack{
-                                HStack{
-                                    ForEach(weather.daily.time, id: \.self) { time in
-                                        Text("\(time)")
-                                            .foregroundColor(.black)
-                                            .frame(width: 100, height: 50)
-                                            .background(.orange)
-                                    }
-                                }
-                                .background(.orange)
-                                HStack{
-                                    ForEach(weather.daily.temperature_2m_min, id: \.self) { temperature in
-                                        Text("Min: \(Int(temperature))°")
-                                            .foregroundColor(.black)
-                                            .frame(width: 100, height: 25)
-                                            .background(.orange)
-                                    }
-                                }
-                                HStack{
-                                    ForEach(weather.daily.temperature_2m_max, id: \.self) { temperature in
-                                        Text("Max: \(Int(temperature))°")
-                                            .foregroundColor(.black)
-                                            .frame(width: 100, height: 25)
-                                            .background(.orange)
-                                    }
-                                }
-                                .background(.orange)
-                            } // VStack som håller time, min och max vertikalt
-                            .foregroundColor(.white)
-                            .background(.orange)
-                        } // HStack som håller alla element horisontellt
-                    } // ScrollView
-                    .background(.white)
-                    
-                    Spacer()
-                    Spacer()
-                    
-                }
-                .frame(maxWidth: .infinity)
-                
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            VStack {
-  
-                Spacer()
-                
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Weather now")
-                        .bold().padding(.bottom)
-                        .offset(y:250)
-                    
-                    HStack {
-                        WeatherRow(logo: "thermometer", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
+                            
+                            Spacer()
+                            
+                            let tempVarToInt = Int(weather.current_weather.temperature)
+                            Text("\(tempVarToInt)°")
+                                .font(.system(size: 60))
+                                .fontWeight(.bold)
+                                .padding()
+                                .foregroundColor(.black)
+                        }
                         
                         Spacer()
+                        //.frame(height: 80)
                         
-                        WeatherRow(logo: "thermometer", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
-                    }
-                    .offset(y: 240)
-                    HStack {
-                        WeatherRow(logo: "wind", name: "Windspeed", value: String(Int(ceil(weather.current_weather.windspeed/3))) + " m/s")
+                        
+                        ScrollView(.horizontal) {
+                            HStack(spacing: 20) {
+                                VStack{
+                                    HStack{
+                                        ForEach(weather.daily.time, id: \.self) { time in
+                                            Text("\(time)")
+                                                .foregroundColor(.black)
+                                                .frame(width: 100, height: 50)
+                                                .background(.orange)
+                                        }
+                                    }
+                                    .background(.orange)
+                                    HStack{
+                                        ForEach(weather.daily.temperature_2m_min, id: \.self) { temperature in
+                                            Text("Min: \(Int(temperature))°")
+                                                .foregroundColor(.black)
+                                                .frame(width: 100, height: 25)
+                                                .background(.orange)
+                                        }
+                                    }
+                                    HStack{
+                                        ForEach(weather.daily.temperature_2m_max, id: \.self) { temperature in
+                                            Text("Max: \(Int(temperature))°")
+                                                .foregroundColor(.black)
+                                                .frame(width: 100, height: 25)
+                                                .background(.orange)
+                                        }
+                                    }
+                                    .background(.orange)
+                                } // VStack som håller time, min och max vertikalt
+                                .foregroundColor(.white)
+                                .background(.orange)
+                            } // HStack som håller alla element horisontellt
+                        } // ScrollView
+                        .background(.white)
                         
                         Spacer()
+                        Spacer()
                         
-                        WeatherRow(logo: "humidity", name: "Humidity", value: String(weather.hourly.relativehumidity_2m[0]) + "%")
                     }
-                    .offset(y: 240)
+                    .frame(maxWidth: .infinity)
+                    
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .padding(.bottom)
-                .foregroundColor(Color(hue: 0.602, saturation: 0.881, brightness: 0.375))
-  
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                VStack {
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Weather now")
+                            .bold().padding(.bottom)
+                            .offset(y:250)
+                        
+                        HStack {
+                            WeatherRow(logo: "thermometer", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
+                            
+                            Spacer()
+                            
+                            WeatherRow(logo: "thermometer", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
+                        }
+                        .offset(y: 240)
+                        HStack {
+                            WeatherRow(logo: "wind", name: "Windspeed", value: String(Int(ceil(weather.current_weather.windspeed/3))) + " m/s")
+                            
+                            Spacer()
+                            
+                            WeatherRow(logo: "humidity", name: "Humidity", value: String(weather.hourly.relativehumidity_2m[0]) + "%")
+                        }
+                        .offset(y: 240)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .padding(.bottom)
+                    .foregroundColor(Color(hue: 0.602, saturation: 0.881, brightness: 0.375))
+                    
+                    Spacer()
+                }
+                
             }
-            
+            .gradientBackground()
+            .edgesIgnoringSafeArea(.all)
         }
-        .gradientBackground()
-        .edgesIgnoringSafeArea(.all)
+    }
+}
+private func addItem() {
+    withAnimation {
+        
     }
 }
 
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
-        WeatherView(weather: previewWeather)
-        /*TabView {
-            //ContentView()
-                //.tabItem {
-                    //Label("Menu", systemImage: "list.dash")
-                //}
+        //WeatherView(weather: previewWeather)
+        TabView {
+            /*ContentView()
+             .tabItem {
+             Label("Menu", systemImage: "list.dash")
+             }*/
             WeatherView(weather: previewWeather)
                 .tabItem {
                     Label("Your location", systemImage: "list.dash")
@@ -196,7 +291,7 @@ struct WeatherView_Previews: PreviewProvider {
                 .tabItem {
                     Label("My list", systemImage: "list.dash")
                 }
-        }*/
+        }
     }
 }
 
@@ -207,7 +302,7 @@ struct GradientBackground : ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                LinearGradient(colors: [.orange, .red, .purple],
+                LinearGradient(colors: [.orange, .red, .purple], //Blue, Mint, Purple
                                startPoint: animateGradient ? .topLeading : .bottomLeading,
                                endPoint: animateGradient ? .bottomTrailing : .topTrailing)
                 .onAppear {

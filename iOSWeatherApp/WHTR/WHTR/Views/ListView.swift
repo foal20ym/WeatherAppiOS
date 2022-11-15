@@ -12,12 +12,15 @@ struct ListView: View {
     @State var myList: [ResponseBody] = []
     
     @State private var elements = ["Donald Duck", "Mickey Mouse", "Goofy", "Pluto"]
-    @State private var searchString = ""
     
     @StateObject var locationManager = LocationManager()
-    var weatherManager = WeatherManager()
-    @State var weather: ResponseBody?
+    @State private var searchString = ""
+    @StateObject private var vm = SearchResultsViewModel()
     
+    @State var weather: ResponseBody?
+    var weatherManager = WeatherManager()
+    @State private var latitudeFromPlace: Double = 1.11
+    @State private var longitudeFromPlace: Double = 1.11
     
     var filteredElements: [String] {
         guard !searchString.isEmpty else {
@@ -26,22 +29,50 @@ struct ListView: View {
         return elements.filter { $0.lowercased().contains(searchString.lowercased()) }
     }
     
+    @State var searchLocations: [String] = []
+    
     var body: some View {
-        var c = locationManager.forwardGeoCode(cityName: searchString)
         
-        var lo = locationManager.location?.latitude
-        var la = locationManager.location?.longitude
-        
-        NavigationStack {
-            List(filteredElements, id: \.self) { element in
-                Text(element)
+        NavigationView {
+            VStack {
+                
+                List(vm.places) { place in
+                    Text(place.name)
+                        .onTapGesture {
+                            print("\(place.latitude):\(place.longitude)")
+                            latitudeFromPlace = place.latitude
+                            longitudeFromPlace = place.longitude
+                            searchLocations.append("\(place.name)")
+                            
+                        }
+                    /*.onSubmit {
+                     myList.append(weatherManager.getCurrentWeather(latitude: latitudeFromPlace, longitude: longitudeFromPlace))
+                     }*/
+                }
+                Text("Latitude: \(latitudeFromPlace)")
+                Text("Longitude: \(longitudeFromPlace)")
+                
+                List {
+                    ForEach(searchLocations, id: \.self) { location in
+                        Text("\(location)")
+                    }
+                    .onTapGesture {
+                        
+                    }
+                    
+                }.searchable(text: $searchString)
+                    .onChange(of: searchString, perform: { searchText in
+                        
+                        if !searchText.isEmpty {
+                            vm.search(text: searchText, region: locationManager.region)
+                            
+                        } else {
+                            vm.places = []
+                        }
+                    })
+                    .navigationTitle("Locations")
             }
-            .navigationTitle("My List")
-            .searchable(text: $searchString)
         }
-        
-        Spacer()
-        
     }
 }
 
