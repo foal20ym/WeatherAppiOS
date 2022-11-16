@@ -24,11 +24,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.requestWhenInUseAuthorization()
-        
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = kCLDistanceFilterNone
         manager.requestAlwaysAuthorization()
-        manager.startUpdatingLocation()
+//        manager.startUpdatingLocation()
     }
     
     func requestLocation() {
@@ -39,13 +38,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.first?.coordinate
         isLoading = false
-        manager.requestLocation()
+//        manager.requestLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Error getting location", error)
         isLoading = false
-        manager.requestLocation()
+//        manager.requestLocation()
     }
     
     let geocoder = CLGeocoder()
@@ -80,22 +79,5 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             self?.location = location.coordinate
             self?.region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 5000, longitudinalMeters: 5000)
         }
-    }
-    
-    func getCurrentWeather(latitude: CLLocationDegrees, longitude: CLLocationDegrees) async throws -> ResponseBody {
-        print("\(latitude), \(longitude)")
-        
-        guard let url = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=temperature_2m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto") else { fatalError("Missing URL") }
-        // This function will use the new async await method introduced in 2021
-        
-        let urlRequest = URLRequest(url: url)
-        
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else { fatalError("Error fetching weather data") }
-        
-        let decodedData = try JSONDecoder().decode(ResponseBody.self, from: data)
-        
-        return decodedData
     }
 }

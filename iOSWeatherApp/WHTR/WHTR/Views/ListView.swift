@@ -19,9 +19,6 @@ struct ListView: View {
     
     @State var weather: ResponseBody?
     var weatherManager = WeatherManager()
-    @State private var latitudeFromPlace: Double = 1.11
-    @State private var longitudeFromPlace: Double = 1.11
-    
     var filteredElements: [String] {
         guard !searchString.isEmpty else {
             return elements
@@ -40,17 +37,10 @@ struct ListView: View {
                     Text(place.name)
                         .onTapGesture {
                             print("\(place.latitude):\(place.longitude)")
-                            latitudeFromPlace = place.latitude
-                            longitudeFromPlace = place.longitude
-                            searchLocations.append("\(place.name)")
                             
                         }
-                    /*.onSubmit {
-                     myList.append(weatherManager.getCurrentWeather(latitude: latitudeFromPlace, longitude: longitudeFromPlace))
-                     }*/
+
                 }
-                Text("Latitude: \(latitudeFromPlace)")
-                Text("Longitude: \(longitudeFromPlace)")
                 
                 List {
                     ForEach(searchLocations, id: \.self) { location in

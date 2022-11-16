@@ -10,36 +10,17 @@ import SwiftUI
 import CoreLocation
 
 struct City: Identifiable, Decodable {
-    var id = UUID() // useful for common SwiftUI display
-    var city: String  // Toronto, Naples, Berlin, etc.
-    var latitude: Float  // What's the best format to
-    var longitude: Float // store latitude and longitude?
+    var id = UUID() // Might not need this.
+    var city: String
+    var latitude: Float
+    var longitude: Float
 }
 
 struct WeatherView: View {
     
-    @State var myList: [ResponseBody] = []
-    @State private var elements = ["Donald Duck", "Mickey Mouse", "Goofy", "Pluto"]
-    @State private var searchString = ""
-    @StateObject var vm = SearchResultsViewModel()
-    var weatherManager = WeatherManager()
-    @State private var latitudeFromPlace: Double = 1.11
-    @State private var longitudeFromPlace: Double = 1.11
-
-    var filteredElements: [String] {
-        guard !searchString.isEmpty else {
-            return elements
-        }
-        return elements.filter { $0.lowercased().contains(searchString.lowercased()) }
-    }
-    
-    @State var searchLocations: [String] = []
-    //
-    @State var weather: ResponseBody
-    
     var weatherCodeDictionary =
     [
-        0:"Clear", 1:"Mainly clear", 2:"cloud.sun.fill",
+        0:"Clear", 1:"Mainly clear", 2:"Partly cloudy",
         3:"Overcast", 45:"Fog", 48:"Thick fog",
         51:"Light drizzle", 53:"Moderate drizzle",55:"Dense drizzle",
         56:"Light freezing drizzle", 57:"Dense freezing drizzle",61:"Light rain fall",
@@ -51,7 +32,7 @@ struct WeatherView: View {
     ]
     var weatherCodeSymbolDictionary =
     [
-        0:"sun.max.fill", 1:"sun.min.fill", 2:"Partly cloudy",
+        0:"sun.max.fill", 1:"sun.min.fill", 2:"cloud.sun",
         3:"cloud", 45:"cloud.fog", 48:"cloud.fog.fill",
         51:"cloud.drizzle", 53:"cloud.drizzle",55:"cloud.drizzle.fill",
         56:"cloud.drizzle.fill", 57:"cloud.drizzle.fill",61:"cloud.drizzle.fill",
@@ -62,12 +43,18 @@ struct WeatherView: View {
         86:"cloud.snow.fill", 95:"cloud.bolt.fill",96:"cloud.bolt.rain.fill", 99:"cloud.bolt.rain.fill"
     ]
     
-    @StateObject var locationManager = LocationManager()
-    @State private var selectedCity = "Toronto"
+    var weatherManager = WeatherManager()
     
+    @State var myList: [ResponseBody] = []
+    @State private var searchString = ""
+    @StateObject var vm = SearchResultsViewModel()
+    @State var searchLocations: [String] = []
+    @State var weather: ResponseBody
+    @StateObject var locationManager = LocationManager()
+    @State private var selectedCity = "Jönköping"
     @State private var cities:[City] = [
+        City(city: "Jönköping", latitude: 57.77, longitude: 14.16),
         City(city: "Toronto", latitude: 43.651070, longitude: 79.347015),
-        City(city: "Al Ain", latitude: 24.207500, longitude: 55.744720),
         City(city: "London", latitude: 51.509865, longitude: -0.118092)
     ]
     
@@ -76,11 +63,11 @@ struct WeatherView: View {
         NavigationStack {
             ZStack(alignment: .leading) {
                 
-/*                var la = Float(weather.latitude)
-                var lo = Float(weather.longitude)
+                var latitude = Float(weather.latitude)
+                var longitude = Float(weather.longitude)
                 
-                var c = locationManager.reverseGeoCode(latitude: Double(la), longitude: Double(lo))
-                var d = locationManager.forwardGeoCode(cityName: selectedCity)*/
+                var reverseGeoCoding = locationManager.reverseGeoCode(latitude: Double(latitude), longitude: Double(longitude))
+                var forwardGeoCoding = locationManager.forwardGeoCode(cityName: selectedCity)
                 
                 VStack {
                     // Temporary solution
@@ -95,11 +82,11 @@ struct WeatherView: View {
                         Text(place.name)
                             .onTapGesture {
                                 print("\(place.latitude):\(place.longitude)")
-                                latitudeFromPlace = place.latitude
-                                longitudeFromPlace = place.longitude
                                 searchLocations.append("\(place.name)")
                                 
                                 cities.append(City(city: place.name, latitude: Float(place.latitude), longitude: Float(place.longitude)))
+                                
+                                selectedCity = place.name
                                 
                                 Task {
                                     do {
@@ -110,39 +97,40 @@ struct WeatherView: View {
                                     } catch {
                                         print("Error getting weather: \(error)")
                                     }
-                                    //WeatherView(weather: weather)
                                 }
                             }
-                    }.searchable(text: $searchString).frame(height: 50).ignoresSafeArea(.all)
-                        .onChange(of: searchString, perform: { searchText in
+                    }
+                    .background(.clear)
+                    .searchable(text: $searchString)
+                    .frame(height: 50).ignoresSafeArea(.all)
+                    .onChange(of: searchString, perform: { searchText in
+                        
+                        if !searchText.isEmpty {
+                            vm.search(text: searchText, region: locationManager.region)
                             
-                            if !searchText.isEmpty {
-                                vm.search(text: searchText, region: locationManager.region)
-                                
-                            } else {
-                                vm.places = []
-                            }
-                        })
-                        .padding(.top)
-                        .padding(.top)
-                    //ASK HOW TO REMOVE THE BLACK VOID OVER SEARCHBAR AND WHAT TO DO TO REMOVE THE LINES ABOVE
+                        } else {
+                            vm.places = []
+                        }
+                    })
+                    .padding(.top)
+                    .padding(.top)
                     
                     HStack {
                         Picker("Please Choose Your City", selection: $selectedCity) {
                             ForEach(cities) { Cities in
                                 Text("\(Cities.city)").tag(Cities.city)
-                                Text("\(Cities.latitude), \(Cities.longitude)")
+                                //Text("\(Cities.latitude), \(Cities.longitude)")
                             }
                             /*.onTapGesture {
-                                Task {
-                                    do {
-                                        weather = try await weatherManager
-                                            .getCurrentWeather(latitude: 1, longitude: 1)
-                                        
-                                    } catch {
-                                        print("Error getting weather: \(error)")
-                                    }
-                                }
+                             Task {
+                             do {
+                             weather = try await weatherManager
+                             .getCurrentWeather(latitude: 1, longitude: 1)
+                             
+                             } catch {
+                             print("Error getting weather: \(error)")
+                             }
+                             }
                              }*/
                         }
                     }
@@ -182,11 +170,7 @@ struct WeatherView: View {
                                 .padding()
                                 .foregroundColor(.black)
                         }
-                        
-                       //Spacer()
-                        //.frame(height: 80)
-                        
-                        
+
                         ScrollView(.horizontal) {
                             HStack(spacing: 20) {
                                 VStack{
@@ -215,11 +199,11 @@ struct WeatherView: View {
                                         }
                                     }
                                     .background(.blue)
-                                } // VStack som håller time, min och max vertikalt
+                                }
                                 .foregroundColor(.white)
                                 .background(.blue)
-                            } // HStack som håller alla element horisontellt
-                        } // ScrollView
+                            }
+                        }
                         .background(.white)
                         
                         Spacer()
@@ -242,11 +226,11 @@ struct WeatherView: View {
                             .offset(y:250)
                         
                         HStack {
-                            WeatherRow(logo: "thermometer", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
+                            WeatherRow(logo: "thermometer.snowflake", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
                             
                             Spacer()
                             
-                            WeatherRow(logo: "thermometer", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
+                            WeatherRow(logo: "thermometer.sun.fill", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
                         }
                         .offset(y: 240)
                         HStack {
@@ -270,26 +254,15 @@ struct WeatherView: View {
             .gradientBackground()
             .edgesIgnoringSafeArea(.all)
         }
+        /*.onAppear {
+         print(weather)
+         }*/
     }
 }
 
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
-        //WeatherView(weather: previewWeather)
-        TabView {
-            /*ContentView()
-             .tabItem {
-             Label("Menu", systemImage: "list.dash")
-             }*/
-            WeatherView(weather: previewWeather)
-                .tabItem {
-                    Label("Your location", systemImage: "list.dash")
-                }
-            ListView()
-                .tabItem {
-                    Label("My list", systemImage: "list.dash")
-                }
-        }
+        WeatherView(weather: previewWeather)
     }
 }
 
@@ -304,10 +277,10 @@ struct GradientBackground : ViewModifier {
                                startPoint: animateGradient ? .topLeading : .bottomLeading,
                                endPoint: animateGradient ? .bottomTrailing : .topTrailing)
                 /*.onAppear {
-                    withAnimation(.linear(duration: 10).repeatForever(autoreverses: true)) {
-                        animateGradient.toggle()
-                    }
-                }*/
+                 withAnimation(.linear(duration: 10).repeatForever(autoreverses: true)) {
+                 animateGradient.toggle()
+                 }
+                 }*/
             )
     }
 }

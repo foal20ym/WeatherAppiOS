@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreLocationUI
-// Test test
+
 struct StartView: View {
     @EnvironmentObject var locationManager: LocationManager
     
