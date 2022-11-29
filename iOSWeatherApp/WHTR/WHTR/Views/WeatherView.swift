@@ -80,6 +80,8 @@ struct WeatherView: View {
                     
                     List(vm.places) { place in
                         Text(place.name)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                   .contentShape(Rectangle())
                             .onTapGesture {
                                 print("\(place.latitude):\(place.longitude)")
                                 searchLocations.append("\(place.name)")
@@ -115,25 +117,27 @@ struct WeatherView: View {
                     .padding(.top)
                     .padding(.top)
                     
-                    HStack {
-                        Picker("Please Choose Your City", selection: $selectedCity) {
-                            ForEach(cities) { Cities in
-                                Text("\(Cities.city)").tag(Cities.city)
-                                //Text("\(Cities.latitude), \(Cities.longitude)")
+                    List(cities) { place in
+                        Text(place.city).tag(place.city)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                   .contentShape(Rectangle())
+                            .onTapGesture {
+                                locationManager.cityName = place.city
+                                selectedCity = place.city
+                                Task {
+                                    do {
+                                        weather = try await weatherManager
+                                            .getCurrentWeather(latitude: CLLocationDegrees(place.latitude), longitude: CLLocationDegrees(place.longitude))
+                                        
+                                    } catch {
+                                        print("Error getting weather: \(error)")
+                                    }
+                                }
                             }
-                            /*.onTapGesture {
-                             Task {
-                             do {
-                             weather = try await weatherManager
-                             .getCurrentWeather(latitude: 1, longitude: 1)
-                             
-                             } catch {
-                             print("Error getting weather: \(error)")
-                             }
-                             }
-                             }*/
-                        }
                     }
+                    .scrollContentBackground(.hidden)
+                    .frame(height: 130)
+                    
                     
                     VStack(alignment: .leading, spacing: 5) {
                         
@@ -170,7 +174,7 @@ struct WeatherView: View {
                                 .padding()
                                 .foregroundColor(.black)
                         }
-
+                        
                         ScrollView(.horizontal) {
                             HStack(spacing: 20) {
                                 VStack{
@@ -223,7 +227,7 @@ struct WeatherView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         Text("Weather now")
                             .bold().padding(.bottom)
-                            .offset(y:250)
+                            .offset(y:300)
                         
                         HStack {
                             WeatherRow(logo: "thermometer.snowflake", name: "Min temp", value:  String(Int(weather.daily.temperature_2m_min[0])) + "°")
@@ -232,7 +236,7 @@ struct WeatherView: View {
                             
                             WeatherRow(logo: "thermometer.sun.fill", name: "Max temp", value: String(Int(weather.daily.temperature_2m_max[0])) + "°")
                         }
-                        .offset(y: 240)
+                        .offset(y: 300)
                         HStack {
                             WeatherRow(logo: "wind", name: "Windspeed", value: String(Int(ceil(weather.current_weather.windspeed/3))) + " m/s")
                             
@@ -240,7 +244,7 @@ struct WeatherView: View {
                             
                             WeatherRow(logo: "humidity", name: "Humidity", value: String(weather.hourly.relativehumidity_2m[0]) + "%")
                         }
-                        .offset(y: 240)
+                        .offset(y: 300)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
